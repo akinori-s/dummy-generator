@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type JoinColumnSetting = 'use_all' | 'random_from_list' | 'random_generated';
 
@@ -38,31 +39,41 @@ interface StoreState {
 	// Additional actions as needed
 }
 
-export const useStore = create<StoreState>((set) => ({
-	joinColumns: [],
-	tables: [],
+export const useStore = create<StoreState>()(
+	persist((set, _get) => ({
+		joinColumns: [],
+		tables: [],
 
-	addJoinColumn: (joinColumn) =>
-		set((state) => ({ joinColumns: [...state.joinColumns, joinColumn] })),
+		addJoinColumn: (joinColumn) =>
+			set((state) => ({ joinColumns: [...state.joinColumns, joinColumn] })),
 
-	updateJoinColumn: (id, updated) =>
-		set((state) => ({
-			joinColumns: state.joinColumns.map((col) =>
-				col.id === id ? { ...col, ...updated } : col
-			),
-		})),
+		updateJoinColumn: (id, updated) =>
+			set((state) => ({
+				joinColumns: state.joinColumns.map((col) =>
+					col.id === id ? { ...col, ...updated } : col
+				),
+			})),
 
-	deleteJoinColumn: (id) =>
-		set((state) => ({
-			joinColumns: state.joinColumns.filter((col) => col.id !== id),
-		})),
+		deleteJoinColumn: (id) =>
+			set((state) => ({
+				joinColumns: state.joinColumns.filter((col) => col.id !== id),
+			})),
 
-	setTables: (tables) => set({ tables }),
+		setTables: (tables) => set({ tables }),
 
-	updateTable: (updatedTable) =>
-		set((state) => ({
-			tables: state.tables.map((table) =>
-				table.tableName === updatedTable.tableName ? updatedTable : table
-			),
-		})),
-}));
+		updateTable: (updatedTable) =>
+			set((state) => ({
+				tables: state.tables.map((table) =>
+					table.tableName === updatedTable.tableName ? updatedTable : table
+				),
+			})),
+	}),
+		{
+			name: 'dummy-generator-storage',
+			storage: createJSONStorage(() => localStorage),
+			// Only persist these fields if you want to keep them across reloads
+			partialize: (state) => ({
+				joinColumns: state.joinColumns,
+			}),
+		})
+);
