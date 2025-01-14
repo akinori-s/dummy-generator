@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useStore, Table, Column } from '../store/useStore';
 import * as Papa from 'papaparse';
 import TableDetailsModal from './TableDetailsModal';
-import { v4 as uuidv4 } from 'uuid';
+import { Button } from '@/components/ui/button'
 
 const TablesListPage: React.FC = () => {
 	const tables = useStore((state) => state.tables);
@@ -69,21 +69,19 @@ const TablesListPage: React.FC = () => {
 			<div className="flex justify-between items-center mb-4">
 				<h1 className="text-2xl font-semibold">Tables</h1>
 				<div className="flex space-x-2">
-					<label className="bg-green-500 text-white px-4 py-2 rounded cursor-pointer">
-						Import CSV
-						<input
-							type="file"
-							accept=".csv"
-							className="hidden"
-							onChange={handleImport}
-						/>
-					</label>
-					<button
-						className="bg-blue-500 text-white px-4 py-2 rounded"
-						onClick={handleGenerateData}
-					>
+					<Button onClick={() => document.getElementById('import-json')?.click()}>
+						Import
+					</Button>
+					<input
+						type="file"
+						id="import-json"
+						className="hidden"
+						accept=".json"
+						onChange={handleImport}
+					/>
+					<Button onClick={handleGenerateData}>
 						Generate Data
-					</button>
+					</Button>
 				</div>
 			</div>
 			{tables.length === 0 ? (
