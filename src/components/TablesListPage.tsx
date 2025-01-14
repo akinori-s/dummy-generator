@@ -3,6 +3,7 @@ import { useStore, Table, Column } from '../store/useStore';
 import * as Papa from 'papaparse';
 import TableDetailsModal from './TableDetailsModal';
 import { Button } from '@/components/ui/button'
+import { parseCSV } from '@/utils/csvParser'
 
 const TablesListPage: React.FC = () => {
 	const tables = useStore((state) => state.tables);
@@ -18,37 +19,7 @@ const TablesListPage: React.FC = () => {
 			header: true,
 			skipEmptyLines: true,
 			complete: (results) => {
-				const parsedData: any[] = results.data;
-				const tablesMap: { [key: string]: Table } = {};
-
-				parsedData.forEach((row) => {
-					const tableName = row.table_name;
-					if (!tablesMap[tableName]) {
-						tablesMap[tableName] = {
-							tableName,
-							columns: [],
-							pkOrdering: [],
-						};
-					}
-					const column: Column = {
-						columnName: row.column_name,
-						dataType: row.data_type,
-						charLength: row.char_length ? parseInt(row.char_length) : undefined,
-						numericPrecision: row.numeric_precision
-							? parseInt(row.numeric_precision)
-							: undefined,
-						numericScale: row.numeric_scale ? parseInt(row.numeric_scale) : undefined,
-						notNull: row.nnot_null === 'TRUE' || row.nnot_null === 'true',
-						isPrimaryKey: row.is_primary_key === 'TRUE' || row.is_primary_key === 'true',
-						isJoinColumn: false, // Default, can be updated later
-					};
-					tablesMap[tableName].columns.push(column);
-					if (column.isPrimaryKey) {
-						tablesMap[tableName].pkOrdering.push(column.columnName);
-					}
-				});
-
-				const importedTables = Object.values(tablesMap);
+				const importedTables = parseCSV(results.data);
 				setTables(importedTables);
 			},
 			error: (error) => {
@@ -76,7 +47,7 @@ const TablesListPage: React.FC = () => {
 						type="file"
 						id="import-json"
 						className="hidden"
-						accept=".json"
+						accept=".csv"
 						onChange={handleImport}
 					/>
 					<Button onClick={handleGenerateData}>
