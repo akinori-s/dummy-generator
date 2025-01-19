@@ -48,55 +48,65 @@ const TableDetailsModal: React.FC<Props> = ({ table, isOpen, onClose }) => {
 		<Dialog open={isOpen} onClose={onClose} className="fixed z-10 inset-0 overflow-y-auto">
 			<div className="flex items-center justify-center min-h-screen px-4">
 				<Dialog.Description className="fixed inset-0 bg-black opacity-30" />
-				<div className="bg-white rounded max-w-lg mx-auto p-6 z-20">
+				<div className="bg-white rounded max-w-4xl mx-auto p-6 z-20">
 					<Dialog.Title className="text-xl font-semibold mb-4">
 						{table.tableName} Details
 					</Dialog.Title>
-					<div>
-						<h3 className="font-medium">Primary Key Ordering</h3>
-						<ul className="list-decimal list-inside">
-							{pkOrdering.map((pk) => (
-								<li key={pk}>{pk}</li>
-							))}
-						</ul>
-						<div className="mt-2">
-							<h4 className="font-medium">Set Primary Keys</h4>
-							<div className="flex flex-wrap">
+
+					<div className="overflow-x-auto">
+						<table className="min-w-full divide-y divide-gray-200">
+							<thead>
+								<tr className="bg-gray-50">
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Column Name</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Type</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Precision/Length</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Primary Key</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Join Column</th>
+								</tr>
+							</thead>
+							<tbody className="bg-white divide-y divide-gray-200">
 								{columns.map((col) => (
-									<button
-										key={col.columnName}
-										className={`m-1 px-3 py-1 rounded ${pkOrdering.includes(col.columnName)
-												? 'bg-blue-500 text-white'
-												: 'bg-gray-200 text-gray-700'
-											}`}
-										onClick={() =>
-											pkOrdering.includes(col.columnName)
-												? handleDeselectPK(col.columnName)
-												: handleSelectPK(col.columnName)
-										}
-									>
-										{col.columnName}
-									</button>
+									<tr key={col.columnName}>
+										<td className="px-6 py-4 whitespace-nowrap">{col.columnName}</td>
+										<td className="px-6 py-4 whitespace-nowrap">{col.dataType}</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											{col.numericPrecision ? `Precision: ${col.numericPrecision}` : ''}
+											{col.numericScale ? `, Scale: ${col.numericScale}` : ''}
+											{col.charLength ? `Length: ${col.charLength}` : ''}
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<div className="flex items-center space-x-2">
+												<input
+													type="checkbox"
+													checked={pkOrdering.includes(col.columnName)}
+													onChange={() =>
+														pkOrdering.includes(col.columnName)
+															? handleDeselectPK(col.columnName)
+															: handleSelectPK(col.columnName)
+													}
+													className="h-4 w-4"
+												/>
+												{pkOrdering.includes(col.columnName) && (
+													<span className="text-sm text-gray-500">
+														Order: {pkOrdering.indexOf(col.columnName) + 1}
+													</span>
+												)}
+											</div>
+										</td>
+										<td className="px-6 py-4 whitespace-nowrap">
+											<input
+												type="checkbox"
+												checked={col.isJoinColumn}
+												onChange={() => handleJoinColumnToggle(col.columnName)}
+												className="h-4 w-4"
+											/>
+										</td>
+									</tr>
 								))}
-							</div>
-						</div>
+							</tbody>
+						</table>
 					</div>
-					<div className="mt-4">
-						<h3 className="font-medium">Join Columns</h3>
-						<ul className="space-y-2">
-							{columns.map((col) => (
-								<li key={col.columnName} className="flex items-center">
-									<input
-										type="checkbox"
-										checked={col.isJoinColumn}
-										onChange={() => handleJoinColumnToggle(col.columnName)}
-										className="mr-2"
-									/>
-									<span>{col.columnName}</span>
-								</li>
-							))}
-						</ul>
-					</div>
+
 					<div className="mt-6 flex justify-end space-x-2">
 						<button
 							className="px-4 py-2 bg-gray-300 rounded"
