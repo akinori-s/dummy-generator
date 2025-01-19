@@ -10,7 +10,6 @@ interface Props {
 
 const TableDetailsModal: React.FC<Props> = ({ table, isOpen, onClose }) => {
 	const updateTable = useStore((state) => state.updateTable);
-	const joinColumns = useStore((state) => state.joinColumns);
 
 	const [pkOrdering, setPkOrdering] = useState<string[]>([...table.pkOrdering]);
 	const [columns, setColumns] = useState<Column[]>([...table.columns]);
@@ -56,7 +55,7 @@ const TableDetailsModal: React.FC<Props> = ({ table, isOpen, onClose }) => {
 					<div>
 						<h3 className="font-medium">Primary Key Ordering</h3>
 						<ul className="list-decimal list-inside">
-							{pkOrdering.map((pk, index) => (
+							{pkOrdering.map((pk) => (
 								<li key={pk}>{pk}</li>
 							))}
 						</ul>
