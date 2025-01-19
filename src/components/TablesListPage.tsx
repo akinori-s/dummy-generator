@@ -4,6 +4,9 @@ import * as Papa from 'papaparse';
 import TableDetailsModal from './TableDetailsModal';
 import { Button } from '@/components/ui/button'
 import { parseCSV } from '@/utils/csvParser'
+import {
+	generateColumnValue,
+} from '../utils/dataGenerators';
 
 const TablesListPage: React.FC = () => {
 	const { tables, joinColumns } = useStore();
@@ -99,15 +102,14 @@ const TablesListPage: React.FC = () => {
 					const columnDef = columns.find((c) => c.columnName === colName);
 					if (!columnDef) return 'NULL';
 
-					// 3) Decide what to place in this cell depending on the column type
+					// Decide what to place in this cell depending on the column type
 					if (columnDef.isPrimaryKey && columnDef.isJoinColumn) {
 						const indexInCombo = pkJoinColumns.findIndex((c) => c.columnName === colName);
 						const value = pkJoinCombo[indexInCombo];
 						// TODO: should probably generate an error here when the index is out of range.
 						return value ? `'${value}'` : `'${colName}_${rowIdx + 1}'`;
 					} else {
-						// Placeholder: 'data_colName_1'
-						return `'data_${colName}_${rowIdx + 1}'`;
+						return generateColumnValue(columnDef, rowIdx, {});
 					}
 				});
 
