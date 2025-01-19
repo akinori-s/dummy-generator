@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useStore, Table, Column } from '../store/useStore';
+import { useStore, Table } from '../store/useStore';
 import * as Papa from 'papaparse';
 import TableDetailsModal from './TableDetailsModal';
 import { Button } from '@/components/ui/button'
 import { parseCSV } from '@/utils/csvParser'
 
 const TablesListPage: React.FC = () => {
-	const tables = useStore((state) => state.tables);
+	const { tables, joinColumns } = useStore();
 	const setTables = useStore((state) => state.setTables);
 	const [selectedTable, setSelectedTable] = useState<Table | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,11 +28,102 @@ const TablesListPage: React.FC = () => {
 		});
 	};
 
+	// Utility to create a Cartesian product from multiple arrays
+	const cartesianProduct = (arrays: string[][]): string[][] => {
+		return arrays.reduce<string[][]>(
+			(acc, curr) =>
+				acc
+					.map((item) => curr.map((val) => [...item, val]))
+					.reduce((a, b) => [...a, ...b], []),
+			[[]]
+		);
+	};
+
+	// Generate a string array of placeholder values, if the column is "random generated"
+	const generatePlaceholderValues = (count: number, prefix = 'value_') => {
+		return Array.from({ length: count }, (_, i) => `${prefix}${i + 1}`);
+	};
+
 	const handleGenerateData = () => {
-		// Placeholder for data generation logic
-		// You can implement the data generation here or send a request to the backend
-		console.log('Generating data based on current settings...');
-		alert('Data generation is not yet implemented.');
+		const joinValuesMap: { [columnName: string]: string[] } = {};
+		joinColumns.forEach((joinCol) => {
+			const { columnName, setting, values } = joinCol;
+			switch (setting) {
+				case 'use_all':
+					// Use all values provided by the user
+					joinValuesMap[columnName] = values ?? [];
+					break;
+				case 'random_from_list':
+					// For simplicity, we’ll store the entire list in the map;
+					// in an advanced scenario, you might randomize picks per row
+					joinValuesMap[columnName] = values ?? [];
+					break;
+				case 'random_generated':
+				default:
+					// Generate some placeholder values (e.g., 10)
+					joinValuesMap[columnName] = generatePlaceholderValues(10, `${columnName}_`);
+					break;
+			}
+		});
+
+		let insertStatements = '';
+		tables.forEach((table) => {
+			const columns = table.columns;
+			const columnNames = columns.map((c) => c.columnName);
+			const pkJoinColumns = columns.filter((col) => col.isPrimaryKey && col.isJoinColumn);
+			const pkJoinValueArrays = pkJoinColumns.map((col) => {
+				const colName = col.columnName;
+				return joinValuesMap[colName] ?? [];
+			});
+
+			const pkJoinCombinations =
+				pkJoinValueArrays.length > 0 ? cartesianProduct(pkJoinValueArrays) : [[]];
+			const totalRows = pkJoinCombinations.length;
+
+			// Prepare a list of rows to insert
+			const tableRowValues: string[][] = [];
+
+			for (let rowIdx = 0; rowIdx < totalRows; rowIdx++) {
+				const pkJoinCombo = pkJoinCombinations[rowIdx] || [];
+
+				// Build a single row of data
+				const rowData = columnNames.map((colName) => {
+					const columnDef = columns.find((c) => c.columnName === colName);
+					if (!columnDef) return 'NULL';
+
+					// 3) Decide what to place in this cell depending on the column type
+					if (columnDef.isPrimaryKey && columnDef.isJoinColumn) {
+						const indexInCombo = pkJoinColumns.findIndex((c) => c.columnName === colName);
+						const value = pkJoinCombo[indexInCombo];
+						// TODO: should probably generate an error here when the index is out of range.
+						return value ? `'${value}'` : `'${colName}_${rowIdx + 1}'`;
+					} else {
+						// Placeholder: 'data_colName_1'
+						return `'data_${colName}_${rowIdx + 1}'`;
+					}
+				});
+
+				tableRowValues.push(rowData);
+			}
+
+			// Build the INSERT statement for the table
+			const insertStatement = `
+INSERT INTO ${table.tableName} (${columnNames.join(', ')}) VALUES
+${tableRowValues
+					.map((row) => `(${row.join(', ')})`)
+					.join(',\n')};
+			`;
+			insertStatements += insertStatement;
+		});
+
+		// download the generated SQL as a file
+		const blob = new Blob([insertStatements], { type: 'text/sql' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'insert_statements.sql';
+		a.click();
+		URL.revokeObjectURL(url);
 	};
 
 	return (
