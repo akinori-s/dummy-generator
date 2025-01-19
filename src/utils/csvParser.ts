@@ -1,5 +1,14 @@
 import { Table, Column } from '../store/useStore';
 
+const consts = {
+	TRUE: 'true',
+	YES: 'yes',
+
+	VARCHAR: 'character varying',
+	NUMERIC: 'numeric',
+	TIMESTAMP_TZ: 'timestamp with time zone',
+};
+
 export const parseCSV = (data: any[]): Table[] => {
 	const tablesMap: { [key: string]: Table } = {};
 
@@ -20,9 +29,9 @@ export const parseCSV = (data: any[]): Table[] => {
 				? parseInt(row.numeric_precision)
 				: undefined,
 			numericScale: row.numeric_scale ? parseInt(row.numeric_scale) : undefined,
-			notNull: row.nnot_null === 'TRUE' || row.nnot_null === 'true',
-			isPrimaryKey: row.is_primary_key === 'TRUE' || row.is_primary_key === 'true',
-			isJoinColumn: false, // Default, can be updated later
+			notNull: row.not_null.toLowerCase() === consts.YES,
+			isPrimaryKey: row.is_primary_key.toLowerCase() === consts.YES,
+			isJoinColumn: false, // Default, updated later
 		};
 		tablesMap[tableName].columns.push(column);
 		if (column.isPrimaryKey) {

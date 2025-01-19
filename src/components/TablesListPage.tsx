@@ -20,6 +20,14 @@ const TablesListPage: React.FC = () => {
 			skipEmptyLines: true,
 			complete: (results) => {
 				const importedTables = parseCSV(results.data);
+				// Mark join columns for the imported tables
+				for (const importedTable of importedTables) {
+					importedTable.columns.forEach((importedCol) => {
+						if (joinColumns.some(joinCol => joinCol.columnName === importedCol.columnName)) {
+							importedCol.isJoinColumn = true;
+						}
+					});
+				}
 				setTables(importedTables);
 			},
 			error: (error) => {
