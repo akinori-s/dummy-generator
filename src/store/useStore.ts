@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type JoinColumnSetting = 'use_all' | 'random_from_list' | 'random_generated';
 
+export type ColumnDataTypes = 'varchar' | 'int' | 'numeric' | 'timestamp';
+
 export interface JoinColumn {
 	id: string;
 	columnName: string;
@@ -12,7 +14,7 @@ export interface JoinColumn {
 
 export interface Column {
 	columnName: string;
-	dataType: string;
+	dataType: ColumnDataTypes;
 	charLength?: number;
 	numericPrecision?: number;
 	numericScale?: number;

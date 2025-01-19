@@ -1,13 +1,5 @@
 import { Table, Column } from '../store/useStore';
-
-const consts = {
-	TRUE: 'true',
-	YES: 'yes',
-
-	VARCHAR: 'character varying',
-	NUMERIC: 'numeric',
-	TIMESTAMP_TZ: 'timestamp with time zone',
-};
+import { consts } from './consts';
 
 export const parseCSV = (data: any[]): Table[] => {
 	const tablesMap: { [key: string]: Table } = {};
