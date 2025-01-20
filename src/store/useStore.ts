@@ -38,6 +38,9 @@ interface StoreState {
 	deleteJoinColumn: (id: string) => void;
 	setTables: (tables: Table[]) => void;
 	updateTable: (updatedTable: Table) => void;
+
+	modalTable: Table | null;
+	setModalTable: (table: Table | null) => void;
 	// Additional actions as needed
 }
 
@@ -69,6 +72,10 @@ export const useStore = create<StoreState>()(
 					table.tableName === updatedTable.tableName ? updatedTable : table
 				),
 			})),
+
+		modalTable: null,
+
+		setModalTable: (table) => set({ modalTable: table }),
 	}),
 		{
 			name: 'dummy-generator-storage',

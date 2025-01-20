@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
-import { useStore, Table } from '../store/useStore';
+import React from 'react';
+import { useStore } from '../store/useStore';
 import * as Papa from 'papaparse';
 import TableDetailsModal from './TableDetailsModal';
-import { Button } from '@/components/ui/button'
 import { parseCSV } from '@/utils/csvParser'
 import {
 	generateColumnValue,
 } from '../utils/dataGenerators';
+import { Button } from '@/components/ui/button'
+import {
+	Dialog,
+	DialogContent,
+} from "@/components/ui/dialog"
 
 const TablesListPage: React.FC = () => {
-	const { tables, joinColumns } = useStore();
+	const { tables, joinColumns, modalTable, setModalTable } = useStore();
 	const setTables = useStore((state) => state.setTables);
-	const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -122,7 +124,7 @@ INSERT INTO ${table.tableName} (${columnNames.join(', ')}) VALUES
 ${tableRowValues
 					.map((row) => `(${row.join(', ')})`)
 					.join(',\n')};
-			`;
+`;
 			insertStatements += insertStatement;
 		});
 
@@ -168,8 +170,7 @@ ${tableRowValues
 								key={table.tableName}
 								className="p-4 bg-white shadow rounded cursor-pointer"
 								onClick={() => {
-									setSelectedTable(table);
-									setIsModalOpen(true);
+									setModalTable(table);
 								}}
 							>
 								<div className="flex justify-between items-center">
@@ -189,13 +190,11 @@ ${tableRowValues
 						))}
 				</ul>
 			)}
-			{selectedTable && (
-				<TableDetailsModal
-					table={selectedTable}
-					isOpen={isModalOpen}
-					onClose={() => setIsModalOpen(false)}
-				/>
-			)}
+			<Dialog open={modalTable !== null} onOpenChange={() => setModalTable(null)}>
+				<DialogContent className="max-h-[80vh] overflow-y-auto">
+					<TableDetailsModal />
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 };
