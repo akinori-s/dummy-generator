@@ -6,7 +6,7 @@ import TablesListPage from './components/TablesListPage';
 
 const App: React.FC = () => {
 	return (
-		<Router>
+		<Router basename="/dummy-generator">
 			<div className="flex h-screen">
 				<Sidebar />
 				<main className="flex-1 bg-gray-100 p-4 overflow-auto">
